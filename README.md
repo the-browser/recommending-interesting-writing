@@ -38,4 +38,4 @@ kwargs = dict(
 model = InnerProduct(**kwargs)
 model.load_state_dict(torch.load(abs_model_path))
 ```
-where final_word_ids, final_url_ids, and final_publication_ids map to dictionaries/word_dictionary.json, article_dictioary.json, and publication_dictionary.json 
+where final_word_ids, final_url_ids, and final_publication_ids map to dictionaries/word_dictionary.json, article_dictionary.json, and publication_dictionary.json 
