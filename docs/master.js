@@ -80,7 +80,7 @@ $(document).ready(function () {
       });
       grand_html += '</tbody>'
       grand_html += '</table>'
-      prepend += `<table class="mdl-data-table mdl-js-data-table rank_results">
+      var prepend = `<table class="mdl-data-table mdl-js-data-table rank_results">
       <thead>
       <tr>
       <th class="mdl-data-table__cell--non-numeric">Score</th>
