@@ -3,20 +3,6 @@
   padding-bottom: 10px;
 }
 
-.main_header {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  background-color: rgb(255, 64, 129);
-  text-align: center;
-  color: white;
-  padding: 25px 0;
-  margin-top: 0;
-  margin-bottom: 20px;
-  height: 70px;
-}
-
 .embedding_slider_holder {
   width: 600px;
   margin: 15px;
@@ -30,15 +16,15 @@
 }
 
 .top_words {
-  color: green;
+  color: rgb(51, 204, 51, .7);
 }
 
 .least_words {
-  color: red;
+  color: rgb(255, 102, 102, .7);
 }
 
 .article_link {
-  color: rgb(63, 81, 181);
+  color: black;
   padding-bottom: 5px;
   margin-bottom: 5px;
   line-height: 20px;
@@ -92,6 +78,7 @@ th {
 
 .description {
   padding-top: 10px;
+  margin-top: 30px;
 }
 
 .mdl-layout__header-row {
@@ -110,4 +97,44 @@ th {
 
 table {
   margin: 0 auto;
+  border-style: hidden !important;
+}
+
+.mdl-layout__header {
+  min-height: 0;
+}
+
+.mdl-layout__tab-bar {
+  background-color: #ff9900 !important;
+}
+
+.info_link {
+  color: #ff9900;
+}
+
+button {
+  background: #ff9900 !important;
+}
+
+.mdl-layout__tab {
+  color: white !important;
+  font-weight: bold;
+}
+
+.mdl-layout__tab.is-active::after {
+  background: black !important;
+}
+
+table tr {
+  border-bottom: 2px dashed #ff9900;
+  height: 100px !important;
+  margin-bottom: 10px !important;
+}
+
+table th {
+  border-bottom: none !important;
+}
+
+table td {
+  height: 100px !important;
 }

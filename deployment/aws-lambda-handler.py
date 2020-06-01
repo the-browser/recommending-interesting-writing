@@ -70,7 +70,7 @@ def lambda_handler(event, context):
 
     publication_bias = 0.45260596
     emb_dict = json.loads(event['body'])
-    
+
     publication_emb[emb_dict['idx1']] = emb_dict['a']
     publication_emb[emb_dict['idx2']] = emb_dict['b']
     publication_emb[emb_dict['idx3']] = emb_dict['c']
@@ -116,7 +116,7 @@ def lambda_handler(event, context):
             word = id_to_word[str(least_word)]
             least_words.append(word)
         current_article['top_words'] = top_words
-        current_article['least_words'] = least_words
+        current_article['least_words'] = round(least_words,3)
         return_articles.append(current_article)
         i += 1
     ordered_return_articles = return_articles[::-1]

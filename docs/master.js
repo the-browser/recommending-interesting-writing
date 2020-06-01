@@ -46,11 +46,14 @@ $(document).ready(function () {
       var grand_html = ""
       ranked_articles.forEach(function (article) {
         grand_html += "<tr>";
+        grand_html += '<td class="logit">';
+        grand_html += article['logit'].toString();
+        grand_html += '</td>'
         grand_html += '<td class="title mdl-data-table__cell--non-numeric"><a class="article_link" href="';
         grand_html += article['link'];
         grand_html += '">';
         grand_html += article['title'];
-        grand_html += '<br></br><br></br>';
+        grand_html += '<br></br>';
         grand_html += '<p class="top_words">';
         article['top_words'].forEach(function (word) {
           if (word.length > 2 && isNaN(word)) {
@@ -73,9 +76,6 @@ $(document).ready(function () {
         grand_html += '<td class="publication">'
         grand_html += article['publication']
         grand_html += '</td>';
-        grand_html += '<td class="logit">';
-        grand_html += article['logit'].toString();
-        grand_html += '</td>'
         grand_html += '</tr>'
       });
       grand_html += '</tbody>'

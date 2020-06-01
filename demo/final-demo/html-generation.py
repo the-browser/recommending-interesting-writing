@@ -5,7 +5,7 @@ from pathlib import Path
 import sys
 
 sys.path.append(
-    "/users/rohan/news-classification/ranking-featured-writing/bert-approach"
+    "/users/rohan/news-classification/ranking-featured-writing/rankfromsets"
 )
 import os
 import argparse
@@ -180,10 +180,10 @@ for idx, article in enumerate(ordered_return_articles):
     if not article["publication"] or len(article["publication"]) > 35:
         continue
     grand_html.append("<tr>")
+    grand_html.append(f"<td class=\"logit\">{round(article['logit'], 3)}</td>")
     grand_html.append(
         f"<td class=\"title mdl-data-table__cell--non-numeric\"><a class=\"article_link\" href=\"{article['link']}\">{article['title']}</a>"
     )
-    grand_html.append("<br></br>")
     grand_html.append("<br></br>")
     top_word_list = ""
     for item in article["top_words"]:
@@ -199,7 +199,6 @@ for idx, article in enumerate(ordered_return_articles):
     grand_html.append(f'<p class="least_words">{least_word_list[:-2]}</p>')
     grand_html.append("</td>")
     grand_html.append(f"<td class=\"publication\">{article['publication']}</td>")
-    grand_html.append(f"<td class=\"logit\">{article['logit']}</td>")
     grand_html.append("</tr>")
 
 # save html to text file

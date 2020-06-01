@@ -1,7 +1,0 @@
-#!/bin/bash
-
-for f in ./*.pdf
-do
-	echo $f
-	ebook-convert $f $f.txt
-done
