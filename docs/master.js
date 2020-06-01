@@ -76,16 +76,17 @@ $(document).ready(function () {
         grand_html = grand_html.slice(0, -1)
         grand_html += '</p>';
         grand_html += '</td>';
-        grand_html += '<td class="publication">'
-        grand_html += article['publication']
-        grand_html += '</td>';
         grand_html += '</tr>'
       });
       grand_html += '</tbody>'
       grand_html += '</table>'
-      var prepend = '<table class="mdl-data-table mdl-js-data-table rank_results">'
-      prepend += "<thead>"
-      prepend += '<tr><th class="mdl-data-table__cell--non-numeric">Articles</th><th class="mdl-data-table__cell--non-numeric">Publication</th><th class="mdl-data-table__cell--non-numeric">Prediction</th></tr></thead><tbody>'
+      prepend += `<table class="mdl-data-table mdl-js-data-table rank_results">
+      <thead>
+      <tr>
+      <th class="mdl-data-table__cell--non-numeric">Score</th>
+      <th class="mdl-data-table__cell--non-numeric">Title</th>
+      </tr>
+      </thead>`
       var final_html_str = prepend + grand_html
       current_selected_tab.find(".spinner").hide();
       current_selected_tab.find(".table-wrapper").append(final_html_str);
