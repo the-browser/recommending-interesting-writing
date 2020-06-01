@@ -1,0 +1,113 @@
+.input_div {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.main_header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  background-color: rgb(255, 64, 129);
+  text-align: center;
+  color: white;
+  padding: 25px 0;
+  margin-top: 0;
+  margin-bottom: 20px;
+  height: 70px;
+}
+
+.embedding_slider_holder {
+  width: 600px;
+  margin: 15px;
+}
+
+.title {
+  padding-bottom: 5px;
+  margin-bottom: 5px;
+  line-height: 20px;
+  vertical-align: center;
+}
+
+.top_words {
+  color: green;
+}
+
+.least_words {
+  color: red;
+}
+
+.article_link {
+  color: rgb(63, 81, 181);
+  padding-bottom: 5px;
+  margin-bottom: 5px;
+  line-height: 20px;
+  font-size: 20px;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+p {
+  margin: 2px;
+}
+
+.logit {
+  text-align: left !important;
+  font-size: 20px !important;
+  font-weight: bold !important;
+}
+
+.publication {
+  text-align: left !important;
+  font-size: 20px !important;
+  font-weight: bold !important;
+}
+
+th {
+  color: black !important;
+  font-weight: bold !important;
+  font-size: 20px !important;
+}
+
+.spinner {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.description {
+  width: 70%;
+  margin: auto;
+  text-align: center;
+  color: black !important;
+  font-weight: bold !important;
+  font-size: 20px !important;
+}
+
+.rank_results {
+  width: 90%;
+  margin-left: 5%;
+  margin-right: 5%;
+}
+
+.description {
+  padding-top: 10px;
+}
+
+.mdl-layout__header-row {
+  text-align: center;
+  margin-bottom: 50px;
+  margin-top: 20px;
+  padding-left: 0px;
+  padding-right: 0px;
+}
+
+#main-heading {
+  font-size: 50px;
+  margin: auto;
+  display: inline-block;
+}
+
+table {
+  margin: 0 auto;
+}
