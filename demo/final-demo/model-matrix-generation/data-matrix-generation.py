@@ -4,7 +4,7 @@ from scipy.sparse import csr_matrix
 import sys
 
 sys.path.append(
-    "/users/rohan/news-classification/ranking-featured-writing/rankfromsets"
+    "/users/rohan/news-classification/ranking-featured-writing/bert-approach"
 )
 import os
 import argparse

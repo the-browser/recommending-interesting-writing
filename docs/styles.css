@@ -1,11 +1,25 @@
 .input_div {
   padding-top: 10px;
   padding-bottom: 10px;
+  display: flex;
+  align-items: center;
+  width: 70%;
+  margin: auto;
+}
+
+.table-wrapper {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  display: flex;
+  align-items: center;
+  width: 70%;
+  margin: auto;
 }
 
 .embedding_slider_holder {
   width: 600px;
   margin: 15px;
+  text-align: center;
 }
 
 .title {
@@ -45,8 +59,9 @@ p {
 
 .publication {
   text-align: left !important;
-  font-size: 20px !important;
   font-weight: bold !important;
+  font-style: italic;
+  font-size: 15px;
 }
 
 th {
@@ -68,6 +83,8 @@ th {
   color: black !important;
   font-weight: bold !important;
   font-size: 20px !important;
+  padding-top: 10px;
+  margin-top: 30px;
 }
 
 .rank_results {
@@ -76,10 +93,6 @@ th {
   margin-right: 5%;
 }
 
-.description {
-  padding-top: 10px;
-  margin-top: 30px;
-}
 
 .mdl-layout__header-row {
   text-align: center;
@@ -89,14 +102,9 @@ th {
   padding-right: 0px;
 }
 
-#main-heading {
-  font-size: 50px;
-  margin: auto;
-  display: inline-block;
-}
-
 table {
-  margin: 0 auto;
+  width: 70%;
+  margin: auto;
   border-style: hidden !important;
 }
 

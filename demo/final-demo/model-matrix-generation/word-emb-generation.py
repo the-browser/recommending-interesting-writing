@@ -5,7 +5,7 @@ from pathlib import Path
 import sys
 
 sys.path.append(
-    "/users/rohan/news-classification/ranking-featured-writing/rankfromsets"
+    "/users/rohan/news-classification/ranking-featured-writing/bert-approach"
 )
 from models.models import InnerProduct
 import pandas as pd

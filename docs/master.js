@@ -54,6 +54,9 @@ $(document).ready(function () {
         grand_html += '">';
         grand_html += article['title'];
         grand_html += '<br></br>';
+        grand_html += '<p class="publication">'
+        grand_html += article['publication']
+        grand_html += '</p>'
         grand_html += '<p class="top_words">';
         article['top_words'].forEach(function (word) {
           if (word.length > 2 && isNaN(word)) {
