@@ -1,0 +1,39 @@
+<section class="mdl-layout__tab-panel" id="fixed-tab-corona">
+    <div class="page-content">
+        <!-- Your content goes here -->
+        <div class="input_div">
+            <div style="width:85%; text-align: center;">
+                <p class="embedding_slider_holder">
+                    <input style="display: inline" class="mdl-slider mdl-js-slider" type="range" id="corona-crime"
+                        min="-100" max="100" value="0" step="20">Crime
+                </p>
+                <p class="embedding_slider_holder">
+                    <input class="mdl-slider mdl-js-slider" type="range" id="corona-business" min="-100" max="100"
+                        value="0" step="20">Business
+                </p>
+                <p class="embedding_slider_holder">
+                    <input style="text-align:center" class="mdl-slider mdl-js-slider" type="range"
+                        id="corona-technology" min="-100" max="100" value="0" step="20">Technology
+                </p>
+                <p class="embedding_slider_holder">
+                    <input style="text-align:center" class="mdl-slider mdl-js-slider" type="range" id="corona-politics"
+                        min="-100" max="100" value="0" step="20">Politics
+                </p>
+            </div>
+            <div style="width:15%; text-align: center">
+                <button style="display: inline-block"
+                    class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored">
+                    <i class="material-icons">forward</i>
+                </button>
+            </div>
+        </div>
+        <div id="corona-spinner" class="spinner mdl-spinner mdl-js-spinner is-active" style="display:none;"></div>
+        <div class="table-wrapper">
+            <table class="mdl-data-table mdl-js-data-table rank_results">
+                <thead>
+                    <tr>
+                        <th class="mdl-data-table__cell--non-numeric">Score</th>
+                        <th class="mdl-data-table__cell--non-numeric">Title</th>
+                    </tr>
+                </thead>
+                <tbody>

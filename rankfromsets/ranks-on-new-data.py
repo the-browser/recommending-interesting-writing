@@ -1,24 +1,19 @@
 # import necessary libraries
-import pandas as pd
-import re
 import torch
-import collections
 import numpy as np
-import json
-import time
+import ujson as json
 import torch.nn as nn
-import os
 import argparse
-import arguments.train_arguments as arguments
-from data_processing.articles import Articles
-from models.models import InnerProduct
-import data_processing.dictionaries as dictionary
-import sampling.sampler_util as sampler_util
-import training.eval_util as eval_util
 from pathlib import Path
-from torch.utils.tensorboard import SummaryWriter
-import matplotlib.pyplot as plt
-from transformers import BertTokenizer
+from tokenizers import BertWordPieceTokenizer
+from transformers import BertForSequenceClassification, BertConfig
+from tqdm import tqdm
+import numpy as np
+import arguments.rank_arguments as arguments
+from data_processing.articles import Articles
+import data_processing.dictionaries as dictionary
+import training.eval_util as eval_util
+from training.collate import collate_fn
 
 parser = argparse.ArgumentParser(description="Get Ranked Predictions on New Dataset.")
 arguments.add_data(parser)
@@ -44,10 +39,6 @@ raw_data = Articles(raw_data_path)
 print("Data Loaded")
 print("-------------------")
 
-# initialize tokenizer from BERT library
-tokenizer = BertTokenizer.from_pretrained("bert-base-uncased", do_lower_case=True)
-print("Tokenizer Initialized!")
-
 # load dictionaries from path
 dictionary_dir = Path(args.dict_dir)
 final_word_ids, final_url_ids, final_publication_ids = dictionary.load_dictionaries(
@@ -56,11 +47,14 @@ final_word_ids, final_url_ids, final_publication_ids = dictionary.load_dictionar
 print("Dictionaries Loaded")
 print("-------------------")
 
+
 # map items to their dictionary values
 if args.map_items:
-    # tokenize data and split into words
-    raw_data.tokenize(tokenizer)
-    # map items to their ids in dictionaries and filter articles
+    # initialize tokenizer from BERT library
+    tokenizer = BertWordPieceTokenizer(args.tokenizer_file, lowercase=True)
+    print("Tokenizer Initialized!")
+
+    # tokenize and map items to their ids in dictionaries and filter articles
     proper_data = raw_data.map_items(
         tokenizer,
         final_word_ids,
@@ -68,6 +62,7 @@ if args.map_items:
         final_publication_ids,
         filter=True,
         min_length=args.min_article_length,
+        day_range=args.days_old,
     )
     print("Mapped and Filtered Data!")
     data_path = Path(args.data_dir)
@@ -129,7 +124,7 @@ def collate_with_neg_fn(examples):
 
 # Generates a dataloader on the dataset that outputs entire set as a batch for one time predictions
 raw_loader = torch.utils.data.DataLoader(
-    raw_data, batch_size=len(raw_data), collate_fn=collate_fn, pin_memory=pin_mem
+    raw_data, batch_size=args.data_batch_size, collate_fn=collate_fn, pin_memory=pin_mem
 )
 
 abs_model_path = Path(args.model_path)
@@ -149,14 +144,20 @@ print("Model Loaded")
 print(model)
 print("-------------------")
 
-sorted_preds, indices = eval_util.calculate_predictions(
-    raw_loader, model, device, args.target_publication
+# get final evaluation results and create a basic csv of top articles
+data_logit_list = []
+for batch in tqdm(raw_data):
+    current_logits = eval_util.calculate_batched_predictions(
+        batch, model, device, args.target_publication
+    )
+    data_logit_list = data_logit_list + list(current_logits)
+converted_list = np.array(eval_logit_list)
+sorted_preds = np.sort(converted_list)
+indices = np.argsort(converted_list)
+
+ranked_df = eval_util.create_ranked_results_list(
+    final_word_ids, sorted_preds, indices, raw_data
 )
-ranked_df = eval_util.create_ranked_eval_list(
-    final_word_ids, args.word_embedding_type, sorted_preds, indices, raw_data
-)
-eval_util.save_ranked_df(
-    output_path, ranked_df, args.word_embedding_type, word_count=args.min_article_length
-)
+eval_util.save_ranked_df(output_path, "evaluation", ranked_df, args.word_embedding_type)
 print("Predictions Made")
 print(f"Ranked Data Saved to {output_path / 'results' / 'evaluation'} directory!")

@@ -4,21 +4,26 @@ import re
 import torch
 import collections
 import numpy as np
-import json
+import ujson as json
 import time
 import torch.nn as nn
 import os
 import argparse
+from pathlib import Path
+from torch.utils.tensorboard import SummaryWriter
+import matplotlib.pyplot as plt
+from tokenizers import BertWordPieceTokenizer
+import random
+from tqdm import tqdm
+import numpy as np
 import arguments.train_arguments as arguments
 from data_processing.articles import Articles
 from models.models import InnerProduct
 import data_processing.dictionaries as dictionary
 import sampling.sampler_util as sampler_util
 import training.eval_util as eval_util
-from pathlib import Path
-from torch.utils.tensorboard import SummaryWriter
-import matplotlib.pyplot as plt
-from transformers import BertTokenizer
+
+np.random.seed(0)
 
 parser = argparse.ArgumentParser(
     description="Train model on article data and test evaluation"
@@ -53,21 +58,12 @@ eval_path = Path(args.eval_path)
 
 train_data = Articles(train_path)
 test_data = Articles(test_path)
-eval_data = Articles(eval_path)
+eval_data = Articles(eval_path, index_file=args.index_file_path)
 print("Data Loaded")
 
 # initialize tokenizer from BERT library
-tokenizer = BertTokenizer.from_pretrained("bert-base-uncased", do_lower_case=True)
+tokenizer = BertWordPieceTokenizer(args.tokenizer_file, lowercase=True)
 print("Tokenizer Initialized!")
-
-# check and tokenize data if items need to be tokenized
-if args.map_items and args.tokenize:
-    train_data.tokenize(tokenizer)
-    print("Train Data Tokenized")
-    test_data.tokenize(tokenizer)
-    print("Test Data Tokenized")
-    eval_data.tokenize(tokenizer)
-print("All Data Tokenized!")
 
 # create and save or load dictionaries based on arguments
 if args.create_dicts:
@@ -75,7 +71,9 @@ if args.create_dicts:
         final_word_ids,
         final_url_ids,
         final_publication_ids,
-    ) = dictionary.create_merged_dictionaries(train_data.examples, tokenizer, "target")
+    ) = dictionary.create_merged_dictionaries(
+        train_data.examples, "target", args.tokenizer_file
+    )
     print("Dictionaries Created")
 
     dict_path = Path(args.data_dir) / "dictionaries"
@@ -94,6 +92,7 @@ else:
 
 # map items in dataset using dictionary keys (convert words and urls to numbers for the model)
 if args.map_items:
+    badtokens = []
     if args.bad_token_path.is_file():
         bad_token_path = Path(args.bad_token_path)
         with open(bad_token_path, "r") as f:
@@ -101,11 +100,7 @@ if args.map_items:
 
         for dataset in [train_data, test_data, eval_data]:
             dataset.map_items(
-                tokenizer,
-                final_url_ids,
-                final_publication_ids,
-                badTokens=badTokens,
-                filter=False,
+                tokenizer, final_url_ids, final_publication_ids, filter=False,
             )
     else:
         for dataset in [train_data, test_data, eval_data]:
@@ -150,10 +145,11 @@ def collate_fn(examples):
         if args.use_all_words:
             words.append(list(set(example["text"])))
         else:
-            if len(example["text"]) > args.words_to_use:
-                words.append(list(set(example["text"][: args.words_to_use])))
+            if len(list(set(example["text"]))) > args.words_to_use:
+                words.append(
+                    random.sample(list(set(example["text"])), args.words_to_use)
+                )
             else:
-                print(list(set(example["text"])))
                 words.append(list(set(example["text"])))
         articles.append(example["url"])
         publications.append(example["model_publication"])
@@ -184,7 +180,7 @@ def collate_with_neg_fn(examples):
 
 
 # pin memory if using GPU for high efficiency
-if device == "cuda":
+if args.use_gpu:
     pin_mem = True
 else:
     pin_mem = False
@@ -197,10 +193,10 @@ train_loader = torch.utils.data.DataLoader(
     pin_memory=pin_mem,
 )
 eval_loader = torch.utils.data.DataLoader(
-    eval_data, batch_size=len(eval_data), collate_fn=collate_fn, pin_memory=pin_mem
+    eval_data, batch_size=10000, collate_fn=collate_fn, pin_memory=pin_mem
 )
 test_loader = torch.utils.data.DataLoader(
-    test_data, batch_size=len(test_data), collate_fn=collate_fn, pin_memory=pin_mem
+    test_data, batch_size=10000, collate_fn=collate_fn, pin_memory=pin_mem
 )
 
 
@@ -247,98 +243,160 @@ labels = torch.Tensor(
 )
 labels = labels.to(device)
 
+validation_recall_list = []
 print("Beginning Training")
 print("--------------------")
 
-# training loop with validation checks every 100 steps and final validation recall calcualation
+# training loop with validation checks
 for step, batch in enumerate(cycle(train_loader)):
-    writer.add_scalar("Loss/train", running_loss / 100, step)
-    print(f"Training Loss: {running_loss/100}")
     # calculate test and evaluation performance based on user intended frequency
     if step % args.frequency == 0 and step != args.training_steps:
-        sorted_preds, indices = eval_util.calculate_predictions(
-            eval_loader,
-            model,
-            device,
+        # output loss
+        model.eval()
+        torch.no_grad()
+        writer.add_scalar("Loss/train", running_loss / args.frequency, step)
+        print(f"Training Loss: {running_loss/args.frequency}")
+        running_loss = 0.0
+        logit_list = []
+        for eval_batch in tqdm(eval_loader):
+            current_logits = eval_util.calculate_batched_predictions(
+                eval_batch, model, device, args.target_publication
+            )
+            logit_list = logit_list + list(current_logits)
+        converted_list = np.array(logit_list)
+        sorted_preds = np.sort(converted_list)
+        indices = np.argsort(converted_list)
+        calc_recall = eval_util.calculate_recall(
+            eval_data,
+            indices,
+            args.eval_recall_max,
             args.target_publication,
-            version="Evaluation",
-            step=step,
-            writer=writer,
-            check_recall=True,
+            "Eval",
+            writer,
+            step,
         )
-        sorted_preds, indices = eval_util.calculate_predictions(
-            test_loader,
-            model,
-            device,
-            args.target_publication,
-            version="Test",
-            step=step,
-            writer=writer,
-            check_recall=True,
-        )
+        validation_recall_list.append(calc_recall)
 
         # save model for easy reloading
-        model_path = output_path / "model"
-        if not model_path.is_dir():
-            model_path.mkdir()
-        model_string = str(step) + args.word_embedding_type + "-inner-product-model.pt"
-        model_path = model_path / model_string
-        torch.save(model.state_dict(), model_path)
+        if max(validation_recall_list) == validation_recall_list[-1]:
+            model_path = output_path / "model"
+            if not model_path.is_dir():
+                model_path.mkdir()
+            model_string = (
+                str(step) + args.word_embedding_type + "-inner-product-model.pt"
+            )
+            model_path = model_path / model_string
+            torch.save(model.state_dict(), model_path)
+
+        # check if validation recall is increasing
+        if len(validation_recall_list) > 3:
+            full_length = len(validation_recall_list)
+            if (
+                validation_recall_list[-1] < validation_recall_list[-2]
+                and validation_recall_list[-2] < validation_recall_list[-3]
+                and validation_recall_list[-3] < validation_recall_list[-4]
+            ):
+                print("Validation Recall Decreased For Two Successive Iterations!")
+                break
+
+    # turn to training mode and calculate loss for backpropagation
+    torch.enable_grad()
     model.train()
-    running_loss = 0.0
     optimizer.zero_grad()
     publications, articles, word_attributes, attribute_offsets, real_labels = batch
-    publications = publications.to(device)
+    publication_set = [args.target_publication] * len(real_labels)
+    publication_set = torch.tensor(publication_set, dtype=torch.long)
+    publication_set = publication_set.to(device)
     articles = articles.to(device)
     word_attributes = word_attributes.to(device)
     attribute_offsets = attribute_offsets.to(device)
-    logits = model(publications, articles, word_attributes, attribute_offsets)
+    logits = model(publication_set, articles, word_attributes, attribute_offsets)
     L = loss(logits, labels)
     L.backward()
     optimizer.step()
     running_loss += L.item()
     if step != 0 and step % args.training_steps == 0:
-        writer.add_scalar("Loss/train", running_loss / 100, step)
+        writer.add_scalar("Loss/train", running_loss / args.frequency, step)
         print(f"Training Loss: {running_loss/100}")
         print("Getting Final Evaluation Results")
         print("--------------------")
-        sorted_preds, indices = eval_util.calculate_predictions(
-            eval_loader,
-            model,
-            device,
-            args.target_publication,
-            version="Evaluation",
-            step=step,
-            writer=writer,
-            check_recall=True,
-        )
-        ranked_df = eval_util.create_ranked_results_list(
-            final_word_ids, args.word_embedding_type, sorted_preds, indices, eval_data
-        )
-        eval_util.save_ranked_df(
-            output_path, "evaluation", ranked_df, args.word_embedding_type
-        )
-        sorted_preds, indices = eval_util.calculate_predictions(
-            test_loader,
-            model,
-            device,
-            args.target_publication,
-            version="Test",
-            step=step,
-            writer=writer,
-            check_recall=True,
-        )
-        ranked_df = eval_util.create_ranked_results_list(
-            final_word_ids, args.word_embedding_type, sorted_preds, indices, test_data
-        )
-        eval_util.save_ranked_df(
-            output_path, "test", ranked_df, args.word_embedding_type
-        )
-        print(f"Ranked Data Saved to {output_path / 'results' / 'evaluation'}!")
-        check = False
         break
+
+# load best model for final performance metrics and data saving
+proper_step_model = (
+    str(np.argmax(validation_recall_list) * args.frequency)
+    + args.word_embedding_type
+    + "-inner-product-model.pt"
+)
+
+writer.add_scalar("Peaked_Steps", np.argmax(validation_recall_list) * args.frequency)
+writer.add_scalar("Max_Evaluation_Recall", np.max(validation_recall_list))
+
+abs_model_path = output_path / "model" / proper_step_model
+kwargs = dict(
+    n_publications=len(final_publication_ids),
+    n_articles=len(final_url_ids),
+    n_attributes=len(final_word_ids),
+    emb_size=args.emb_size,
+    sparse=args.use_sparse,
+    use_article_emb=args.use_article_emb,
+    mode=args.word_embedding_type,
+)
+model = InnerProduct(**kwargs)
+model.load_state_dict(torch.load(abs_model_path))
+model.to(device)
+model.eval()
+torch.no_grad()
+
+# get final evaluation results and create a basic csv of top articles
+eval_logit_list = []
+for batch in tqdm(eval_loader):
+    current_logits = eval_util.calculate_batched_predictions(
+        batch, model, device, args.target_publication
+    )
+    eval_logit_list = eval_logit_list + list(current_logits)
+converted_list = np.array(eval_logit_list)
+sorted_preds = np.sort(converted_list)
+indices = np.argsort(converted_list)
+calc_recall = eval_util.calculate_recall(
+    eval_data,
+    indices,
+    args.eval_recall_max,
+    args.target_publication,
+    "Eval",
+    writer,
+    step,
+)
+ranked_df = eval_util.create_ranked_results_list(
+    final_word_ids, sorted_preds, indices, eval_data
+)
+eval_util.save_ranked_df(output_path, "evaluation", ranked_df, args.word_embedding_type)
+
+# get final test results and create a basic csv of top articles
+test_logit_list = []
+for batch in tqdm(test_loader):
+    current_logits = eval_util.calculate_batched_predictions(
+        batch, model, device, args.target_publication
+    )
+    test_logit_list = test_logit_list + list(current_logits)
+converted_list = np.array(test_logit_list)
+sorted_preds = np.sort(converted_list)
+indices = np.argsort(converted_list)
+calc_recall = eval_util.calculate_recall(
+    test_data,
+    indices,
+    args.test_recall_max,
+    args.target_publication,
+    "Test",
+    writer,
+    step,
+)
+ranked_df = eval_util.create_ranked_results_list(
+    final_word_ids, sorted_preds, indices, test_data
+)
+eval_util.save_ranked_df(output_path, "test", ranked_df, args.word_embedding_type)
 
 # close writer and exit
 writer.close()
-print(f"Ranked Data Saved to {output_path / 'results' / 'test'}!")
+print(f"Ranked Data Saved to {output_path / 'results'}!")
 print("Done!")

@@ -5,7 +5,7 @@ from pathlib import Path
 import sys
 
 sys.path.append(
-    "/users/rohan/news-classification/ranking-featured-writing/bert-approach"
+    "/users/rohan/news-classification/ranking-featured-writing/rankfromsets"
 )
 from models.models import InnerProduct
 import pandas as pd
@@ -100,3 +100,6 @@ rev_path = args.output_dir / "reversed_word_ids.json"
 with open(rev_path, "w") as file:
     json.dump(reversed_word_ids, file)
 print("Reversed Id To Word Dictionary Saved.")
+
+print(publication_emb)
+print(publication_bias)

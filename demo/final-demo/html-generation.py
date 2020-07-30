@@ -5,7 +5,7 @@ from pathlib import Path
 import sys
 
 sys.path.append(
-    "/users/rohan/news-classification/ranking-featured-writing/bert-approach"
+    "/users/rohan/news-classification/ranking-featured-writing/rankfromsets"
 )
 import os
 import argparse
@@ -22,7 +22,7 @@ def expand_path(string):
 
 
 parser = argparse.ArgumentParser(
-    description="Train model on article data and test evaluation"
+    description="Generate default website demo html output for a specific dataset"
 )
 parser.add_argument(
     "--model_matrix_dir",
@@ -35,11 +35,14 @@ parser.add_argument(
     "--data_matrix_path",
     type=expand_path,
     required=True,
-    help="This is required to load dictionaries",
+    help="This is required to load data matrix",
 )
 
 parser.add_argument(
-    "--dict_dir", type=expand_path, required=True, help="Path to data to be ranked."
+    "--dict_dir",
+    type=expand_path,
+    required=True,
+    help="Path to location of dictionaries",
 )
 
 parser.add_argument(
@@ -75,35 +78,20 @@ print("Dictionaries loaded.")
 # load numeric data for calculations
 publication_emb = np.asarray(
     [
-        1.9955785,
-        2.0590432,
-        2.1761959,
-        -2.0220742,
-        1.9912238,
-        -2.027111,
-        -2.2134302,
-        -1.9901487,
-        2.0043654,
-        -2.3093524,
-        -2.0107682,
-        2.002998,
-        2.0343666,
-        -2.0904067,
-        2.4320478,
-        2.0393133,
-        2.0141761,
-        1.992825,
-        1.9798595,
-        -2.0268648,
-        -1.9863509,
-        2.0398421,
-        -1.9834707,
-        -2.0138183,
-        1.997613,
+        0.77765566,
+        0.76451594,
+        0.75550663,
+        -0.7732487,
+        0.7341457,
+        0.7216135,
+        -0.7263404,
+        0.73897207,
+        -0.720818,
+        0.73908365,
     ],
     dtype=np.float32,
 )
-publication_bias = 0.45260596
+publication_bias = 0.43974462
 
 word_article_path = args.data_matrix_path
 word_articles = scipy.sparse.load_npz(word_article_path)
@@ -118,7 +106,9 @@ print(word_articles.shape)
 print(word_emb.shape)
 article_embeddings = word_articles.dot(word_emb)
 
-emb_times_publication = np.dot(article_embeddings, publication_emb.reshape(25, 1))
+emb_times_publication = np.dot(
+    article_embeddings, publication_emb.reshape(len(publication_emb), 1)
+)
 
 article_bias = word_articles.dot(word_bias)
 
@@ -130,7 +120,9 @@ final_logits = np.divide(product_with_bias, word_counts) + float(publication_bia
 
 indices = final_logits.argsort(axis=0)[-75:].reshape(75)
 
-word_logits = np.dot(word_emb, publication_emb.reshape(25, 1)) + word_bias
+word_logits = (
+    np.dot(word_emb, publication_emb.reshape(len(publication_emb), 1)) + word_bias
+)
 
 top_articles = word_articles[indices.tolist()[0]]
 
@@ -152,11 +144,21 @@ for idx in indices.tolist()[0]:
     least_words = []
     for top_word in current_sorted_words[-20:]:
         word = id_to_word[top_word]
-        if "unused" not in word and "##" not in word and len(word) > 1:
+        if (
+            "unused" not in word
+            and "##" not in word
+            and len(word) > 1
+            and "[UNK]" not in word
+        ):
             top_words.append(word)
     for least_word in current_sorted_words[:20]:
         word = id_to_word[least_word]
-        if "unused" not in word and "##" not in word and len(word) > 1:
+        if (
+            "unused" not in word
+            and "##" not in word
+            and len(word) > 1
+            and "[UNK]" not in word
+        ):
             least_words.append(word)
     current_article["top_words"] = top_words
     current_article["least_words"] = least_words
@@ -202,9 +204,9 @@ for idx, article in enumerate(ordered_return_articles):
     grand_html.append("</tr>")
 
 # save html to text file
-ending = str(args.dataset_name) + ".txt"
+ending = str(args.dataset_name) + "-table.html"
 final_html_path = args.html_output_dir / ending
 
 with open(final_html_path, "w", encoding="utf-8") as file:
     file.write("\n".join(grand_html))
-print("HTML default text saved!")
+print("HTML default table saved!")

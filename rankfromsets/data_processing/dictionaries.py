@@ -3,10 +3,9 @@ import pathlib as Path
 import json
 import errno
 import os
-from transformers import BertTokenizer
 
 # function to create dictionaries for words and urls for all datasets at once
-def create_merged_dictionaries(all_examples, tokenizer, target_publication):
+def create_merged_dictionaries(all_examples, target_publication, wordListPath):
     url_counter = collections.Counter()
     publication_counter = collections.Counter()
     urls = []
@@ -14,18 +13,20 @@ def create_merged_dictionaries(all_examples, tokenizer, target_publication):
     publications.append(target_publication)
 
     for example in all_examples:
-        urls.append(example['url'])
-        publications.append(example['model_publication'])
+        urls.append(example["url"])
+        publications.append(example["model_publication"])
 
     url_counter.update(urls)
     publication_counter.update(publications)
-    article_to_id = {word: id for id, word in enumerate(url_counter.keys())}
-    publication_to_id = {publication: id for id, publication in enumerate(publication_counter.keys())}
+    article_to_id = {link: id for id, link in enumerate(url_counter.keys())}
+    publication_to_id = {
+        publication: id for id, publication in enumerate(publication_counter.keys())
+    }
     article_to_id.update({"miscellaneous": len(article_to_id)})
     publication_to_id.update({"miscellaneous": len(publication_to_id)})
-    word_id_list = {}
-    for idx, word in enumerate(tokenizer.vocab.keys()):
-        word_id_list.update({word: idx})
+    with open(wordListPath, encoding="utf-8") as f:
+        wordList = [line.rstrip() for line in f.readlines()]
+    word_id_list = {word: id for id, word in enumerate(wordList)}
     return word_id_list, article_to_id, publication_to_id
 
 
@@ -52,7 +53,11 @@ def load_dictionaries(abs_dictionary_dir):
     url_id_path = abs_dictionary_dir / "article_dictionary.json"
     publication_id_path = abs_dictionary_dir / "publication_dictionary.json"
 
-    if word_dict_path.is_file() and url_id_path.is_file() and publication_id_path.is_file():
+    if (
+        word_dict_path.is_file()
+        and url_id_path.is_file()
+        and publication_id_path.is_file()
+    ):
         with open(word_dict_path, "r") as file:
             final_word_ids = json.load(file)
 

@@ -14,8 +14,8 @@ def get_keys_for_dir_name(grid):
 
 
 def make_output_dir(log_dir, experiment_name, cfg, keys):
-    name = '_'.join(['%s=%s' % (key, str(cfg[key])) for key in keys])
-    date = time.strftime("%Y-%m-%d") + "-BERT"
+    name = "_".join(["%s=%s" % (key, str(cfg[key])) for key in keys])
+    date = time.strftime("%Y-%m-%d") + "-rankfromsets"
     output_dir = log_dir / date / experiment_name / name
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -41,15 +41,15 @@ def submit(command_list, cfg, get_slurm_script):
     is the argument for the command line flag.
     """
     param_tuples = list(cfg.items())
-    args = ' '.join(['--%s=%s' % tup for tup in param_tuples])
-    command = '\n'.join([' '.join([command, args])for command in command_list])
-    file_contents = get_slurm_script(cfg['output_dir'], command)
+    args = " ".join(["--%s=%s" % tup for tup in param_tuples])
+    command = "\n".join([" ".join([command, args]) for command in command_list])
+    file_contents = get_slurm_script(cfg["output_dir"], command)
     print(file_contents)
-    fname = cfg['output_dir'] / 'job.cmd'
-    with open(fname, 'w') as f:
+    fname = cfg["output_dir"] / "job.cmd"
+    with open(fname, "w") as f:
         f.write(file_contents)
-    print('wrote file to: %s' % fname)
-    print('contents:')
+    print("wrote file to: %s" % fname)
+    print("contents:")
     print(file_contents)
-    subprocess.call(['sbatch', fname])
+    subprocess.call(["sbatch", fname])
     time.sleep(0.1)
