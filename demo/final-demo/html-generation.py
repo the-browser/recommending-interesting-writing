@@ -7,6 +7,9 @@ import sys
 sys.path.append(
     "/users/rohan/news-classification/ranking-featured-writing/rankfromsets"
 )
+sys.path.append(
+    "/Users/gkreder/Dropbox/Personal/browser/recommending-interesting-writing/rankfromsets/"
+)
 import os
 import argparse
 from data_processing.articles import Articles
@@ -182,11 +185,11 @@ for idx, article in enumerate(ordered_return_articles):
     if not article["publication"] or len(article["publication"]) > 35:
         continue
     grand_html.append("<tr>")
-    grand_html.append(f"<td class=\"logit\">{round(article['logit'], 3)}</td>")
+    # grand_html.append(f"<td class=\"logit\">{round(article['logit'], 3)}</td>")
     grand_html.append(
         f"<td class=\"title mdl-data-table__cell--non-numeric\"><a class=\"article_link\" href=\"{article['link']}\">{article['title']}</a>"
     )
-    grand_html.append("<br></br>")
+    # grand_html.append("<br></br>")
     grand_html.append(f"<p class=\"publication\">{article['publication']}</p>")
     top_word_list = ""
     for item in article["top_words"]:

@@ -43,15 +43,15 @@ $(document).ready(function () {
       var grand_html = "";
       ranked_articles.forEach(function (article) {
         grand_html += "<tr>";
-        grand_html += '<td class="logit">';
-        grand_html += article["logit"].toString();
-        grand_html += "</td>";
+        // grand_html += '<td class="logit">';
+        // grand_html += article["logit"].toString();
+        // grand_html += "</td>";
         grand_html +=
           '<td class="title mdl-data-table__cell--non-numeric"><a class="article_link" href="';
         grand_html += article["link"];
         grand_html += '">';
         grand_html += article["title"];
-        grand_html += "<br></br>";
+        // grand_html += "<br></br>";
         grand_html += '<p class="publication">';
         grand_html += article["publication"];
         grand_html += "</p>";
@@ -81,13 +81,16 @@ $(document).ready(function () {
       var prepend = `<table class="mdl-data-table mdl-js-data-table rank_results">
       <thead>
       <tr>
-      <th class="mdl-data-table__cell--non-numeric">Score</th>
-      <th class="mdl-data-table__cell--non-numeric">Title</th>
       </tr>
       </thead>`;
       var final_html_str = prepend + grand_html;
       current_selected_tab.find(".spinner").hide();
       current_selected_tab.find(".table-wrapper").append(final_html_str);
     })();
+  });
+  $('.toggle_words').click(function() {
+    console.log($(this).siblings(".top_words").text());
+    $(this).siblings(".top_words").toggle(500);
+    $(this).siblings(".least_words").toggle(500);
   });
 });
