@@ -35,15 +35,20 @@
   }
   .top_words {
     padding-top: 1%;
-    color: rgb(51, 204, 51, .7);
+    /*color: rgb(51, 204, 51, .7);*/
+    color: #292828;
     display : inline-block;
     word-wrap: break-word;
     overflow-wrap: break-word;
+    white-space: break-spaces; 
+
   }
   .least_words {
-    color: rgb(255, 102, 102, .7);
+    /*color: rgb(255, 102, 102, .7);*/
+    color: #969595;
     word-wrap: break-word;
     overflow-wrap: break-word;
+    white-space: break-spaces;
   }
   .article_link {
     width:10px;
@@ -179,15 +184,19 @@
 }
 .top_words {
   padding-top: 1%;
-  color: rgb(51, 204, 51, .7);
+  /*color: rgb(51, 204, 51, .7);*/
+  color: #292828;
   display : inline-block;
   word-wrap: break-word;
   overflow-wrap: break-word;
+  white-space: break-spaces; 
 }
 .least_words {
-  color: rgb(255, 102, 102, .7);
+  /*color: rgb(255, 102, 102, .7);*/
+  color: #969595;
   word-wrap: break-word;
   overflow-wrap: break-word;
+  white-space: break-spaces;
 }
 .toggle_words {
     display : inline-block;
@@ -274,6 +283,10 @@ button {
   font-weight: bold;
 }
 
+/*.mdl-data-table__cell--non-numeric{
+  background: black;
+}*/
+
 
 .mdl-layout__tab.is-active::after {
   background: black !important;
@@ -292,6 +305,5 @@ table td {
   /*white-space: pre-wrap; */
   overflow-wrap: break-word;
 }
-
 
 
