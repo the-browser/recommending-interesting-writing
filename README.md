@@ -1,6 +1,8 @@
 # recommending-interesting-writing
 
-**submission to INTRS @ RECSYS 2020 workshop**
+**Presented at INTRS @ RECSYS 2020 workshop**
+Paper: http://ceur-ws.org/Vol-2682/short2.pdf
+Talk: https://www.youtube.com/watch?t=8974&v=6uO2KwjCgXE
 
 The process for this project is outlined below:
 
